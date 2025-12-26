@@ -288,6 +288,9 @@ int main(int ac, char *av[])
 
     MyCoolRawProcessor.recycle();
   } // endfor
+
+  if (outfile) fclose(outfile);
+
   return 0;
 }
 
@@ -533,6 +536,7 @@ void print_verbose(FILE *outfile, LibRaw &MyCoolRawProcessor, std::string &fn)
   fprintf(outfile, "Output size: %4d x %d\n", S.iwidth, S.iheight);
   fprintf(outfile, "Image flip: %d\n", S.flip);
 
+  fprintf(outfile, "Raw BPS: %d\n", C.raw_bps);
   fprintf(outfile, "Raw colors: %d", P1.colors);
   if (P1.filters)
   {
