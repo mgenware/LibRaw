@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(raw_identify)
+add_executable(raw-identify raw-identify.cpp)
+find_package(LibRaw REQUIRED)
+target_link_libraries(raw-identify PRIVATE LibRaw::LibRaw)
+install(TARGETS raw-identify RUNTIME DESTINATION bin)
