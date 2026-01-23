@@ -58,19 +58,20 @@ it under the terms of the one of two licenses as you choose:
 #endif
 
 /* wchar_t* API for std::filebuf */
-# if (defined(_MSC_VER)  && (_MSC_VER > 1310)) || (defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 910))
-#  ifndef LIBRAW_WIN32_UNICODEPATHS
-#   define LIBRAW_WIN32_UNICODEPATHS
-#  endif
-# elif _GLIBCXX_HAVE__WFOPEN && _GLIBCXX_USE_WCHAR_T
-#  ifndef LIBRAW_WIN32_UNICODEPATHS
-#    define LIBRAW_WIN32_UNICODEPATHS
-#  endif
-# elif defined(_LIBCPP_HAS_OPEN_WITH_WCHAR)
-#  ifndef LIBRAW_WIN32_UNICODEPATHS
-#    define LIBRAW_WIN32_UNICODEPATHS
-#  endif
-# endif
+// No need LIBRAW_WIN32_UNICODEPATHS as we have UTF8 support set in libraw-cmake fork.
+// # if (defined(_MSC_VER)  && (_MSC_VER > 1310)) || (defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 910))
+// #  ifndef LIBRAW_WIN32_UNICODEPATHS
+// #   define LIBRAW_WIN32_UNICODEPATHS
+// #  endif
+// # elif _GLIBCXX_HAVE__WFOPEN && _GLIBCXX_USE_WCHAR_T
+// #  ifndef LIBRAW_WIN32_UNICODEPATHS
+// #    define LIBRAW_WIN32_UNICODEPATHS
+// #  endif
+// # elif defined(_LIBCPP_HAS_OPEN_WITH_WCHAR)
+// #  ifndef LIBRAW_WIN32_UNICODEPATHS
+// #    define LIBRAW_WIN32_UNICODEPATHS
+// #  endif
+// # endif
 
 #endif
 
