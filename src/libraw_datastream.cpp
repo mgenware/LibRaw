@@ -703,7 +703,29 @@ LibRaw_bigfile_buffered_datastream::LibRaw_bigfile_buffered_datastream(const cha
     if (filename.size() > 0)
     {
         std::string fn(fname);
-        std::wstring fpath(fn.begin(), fn.end());
+
+        // Convert UTF-8 path (argv[1]) to UTF-16 wstring
+        int size_needed = MultiByteToWideChar(CP_UTF8, 0, fn.c_str(), -1, nullptr, 0);
+        if (size_needed == 0)
+        {
+            filename = std::string();
+            fhandle = INVALID_HANDLE_VALUE;
+            return;
+        }
+
+        std::wstring fpath(size_needed, L'\0'); // allocate buffer
+        if (MultiByteToWideChar(CP_UTF8, 0, fn.c_str(), -1, &fpath[0], size_needed) == 0)
+        {
+            filename = std::string();
+            fhandle = INVALID_HANDLE_VALUE;
+            return;
+        }
+
+        // Remove the extra null at the end added by wstring constructor
+        if (!fpath.empty() && fpath.back() == L'\0')
+        {
+            fpath.pop_back();
+        }
 #if defined(WINAPI_FAMILY) && defined(WINAPI_FAMILY_APP) && (WINAPI_FAMILY == WINAPI_FAMILY_APP)
         if ((fhandle = CreateFile2(fpath.c_str(), GENERIC_READ, 0, OPEN_EXISTING, 0)) != INVALID_HANDLE_VALUE)
 #else
