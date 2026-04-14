@@ -18,6 +18,11 @@ it under the terms of the one of two licenses as you choose:
 
  */
 
+// Exclude this from WIN32
+#ifndef _WIN32
+#include "librawinfo.h"
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -192,7 +197,11 @@ void print_usage(const char *pname)
          "\t-o filename\toutput to filename\n");
 }
 
+#ifndef _WIN32
+int rawinfo_main(int ac, char *av[])
+#else
 int main(int ac, char *av[])
+#endif
 {
   int ret;
   int verbose = 0, print_sz = 0, print_unpack = 0, print_frame = 0, print_wb = 0;
@@ -323,84 +332,70 @@ void print_verbose(FILE *outfile, LibRaw &MyCoolRawProcessor, std::string &fn)
     return; // no recycle, open_file will recycle
   }
 
-  fprintf(outfile, "\nFilename: %s\n", fn.c_str());
+  // fprintf(outfile, "\nFilename: %s\n", fn.c_str());
   if (C.OriginalRawFileName[0])
-    fprintf(outfile, "OriginalRawFileName: =%s=\n", C.OriginalRawFileName);
-  fprintf(outfile, "Timestamp: %s", ctime(&(P2.timestamp)));
-  fprintf(outfile, "Camera: %s %s ID: 0x%llx\n", P1.make, P1.model, mnLens.CamID);
-  fprintf(outfile, "Normalized Make/Model: =%s/%s= ", P1.normalized_make, P1.normalized_model);
+    fprintf(outfile, "OriginalRawFileName: %s\n", C.OriginalRawFileName);
+  fprintf(outfile, "Timestamp: %lld\n", (long long)P2.timestamp);
+  fprintf(outfile, "CamMake: %s\n", P1.make);
+  fprintf(outfile, "CamModel: %s\n", P1.model);
+  if (mnLens.CamID)
+  {
+    fprintf(outfile, "CamID: %lld\n", (long long)mnLens.CamID);
+  }
+  fprintf(outfile, "Normalized Make/Model: %s %s\n", P1.normalized_make, P1.normalized_model);
   fprintf(outfile, "CamMaker ID: %d\n", P1.maker_index);
+  if (mnLens.Lens[0])
+    fprintf(outfile, "Lens: %s\n", mnLens.Lens);
 
   {
-    int i = 0;
-    char sep[] = ", ";
     if (C.UniqueCameraModel[0])
     {
-      i++;
-      fprintf(outfile, "UniqueCameraModel: =%s=", C.UniqueCameraModel);
+      fprintf(outfile, "UniqueCameraModel: %s\n", C.UniqueCameraModel);
     }
     if (C.LocalizedCameraModel[0])
     {
-      if (i)
-      {
-        fprintf(outfile, "%s", sep);
-        i++;
-      }
-      fprintf(outfile, "LocalizedCameraModel: =%s=", C.LocalizedCameraModel);
-    }
-    if (i)
-    {
-      fprintf(outfile, "\n");
-      i = 0;
+      fprintf(outfile, "LocalizedCameraModel: %s\n", C.LocalizedCameraModel);
     }
     if (C.ImageUniqueID[0])
     {
-      if (i)
-        fprintf(outfile, "%s", sep);
-      i++;
-      fprintf(outfile, "ImageUniqueID: =%s=", C.ImageUniqueID);
+      fprintf(outfile, "ImageUniqueID: %s\n", C.ImageUniqueID);
     }
     if (C.RawDataUniqueID[0])
     {
-      if (i)
-        fprintf(outfile, "%s", sep);
-      i++;
-      fprintf(outfile, "RawDataUniqueID: =%s=", C.RawDataUniqueID);
+      fprintf(outfile, "RawDataUniqueID: %s\n", C.RawDataUniqueID);
     }
-    if (i)
-      fprintf(outfile, "\n");
   }
 
   if (ShootingInfo.BodySerial[0] && strcmp(ShootingInfo.BodySerial, "0"))
   {
     trimSpaces(ShootingInfo.BodySerial);
-    fprintf(outfile, "Body#: %s", ShootingInfo.BodySerial);
+    fprintf(outfile, "Body#: %s\n", ShootingInfo.BodySerial);
   }
   else if (C.model2[0] && (!strncasecmp(P1.normalized_make, "Kodak", 5)))
   {
     trimSpaces(C.model2);
-    fprintf(outfile, "Body#: %s", C.model2);
+    fprintf(outfile, "Body#: %s\n", C.model2);
   }
   if (ShootingInfo.InternalBodySerial[0])
   {
     trimSpaces(ShootingInfo.InternalBodySerial);
-    fprintf(outfile, " BodyAssy#: %s", ShootingInfo.InternalBodySerial);
+    fprintf(outfile, "InternalBody#: %s\n", ShootingInfo.InternalBodySerial);
   }
   if (exifLens.LensSerial[0])
   {
     trimSpaces(exifLens.LensSerial);
-    fprintf(outfile, " Lens#: %s", exifLens.LensSerial);
+    fprintf(outfile, "Lens#: %s\n", exifLens.LensSerial);
   }
   if (exifLens.InternalLensSerial[0])
   {
     trimSpaces(exifLens.InternalLensSerial);
-    fprintf(outfile, " LensAssy#: %s", exifLens.InternalLensSerial);
+    fprintf(outfile, "InternalLens#: %s\n", exifLens.InternalLensSerial);
   }
   if (P2.artist[0])
-    fprintf(outfile, " Owner: %s\n", P2.artist);
+    fprintf(outfile, "Owner: %s\n", P2.artist);
   if (P1.dng_version)
   {
-    fprintf(outfile, " DNG Version: ");
+    fprintf(outfile, "DNG Version: ");
     for (int i = 24; i >= 0; i -= 8)
       fprintf(outfile, "%d%c", P1.dng_version >> i & 255, i ? '.' : '\n');
   }
@@ -425,10 +420,11 @@ void print_verbose(FILE *outfile, LibRaw &MyCoolRawProcessor, std::string &fn)
   fprintf(outfile, "\tExposureProgram: %d\n", ShootingInfo.ExposureProgram);
   fprintf(outfile, "\tImageStabilization: %d\n", ShootingInfo.ImageStabilization);
 
-  fprintf(outfile, "\tLens: %s\n", mnLens.Lens);
-  fprintf(outfile, "\tLensFormat: %d, ", mnLens.LensFormat);
+  // Fileyan: Moved to top.
+  // fprintf(outfile, "\tLens: %s\n", mnLens.Lens);
+  fprintf(outfile, "\tLensFormat: %d\n", mnLens.LensFormat);
 
-  fprintf(outfile, "\tLensMount: %d, ", mnLens.LensMount);
+  fprintf(outfile, "\tLensMount: %d\n", mnLens.LensMount);
   fprintf(outfile, "\tFocalType: %d, ", mnLens.FocalType);
   switch (mnLens.FocalType)
   {
@@ -537,14 +533,39 @@ void print_verbose(FILE *outfile, LibRaw &MyCoolRawProcessor, std::string &fn)
   fprintf(outfile, "Image flip: %d\n", S.flip);
 
   fprintf(outfile, "Raw BPS: %d\n", C.raw_bps);
-  fprintf(outfile, "Raw colors: %d", P1.colors);
+  fprintf(outfile, "Raw colors: %d\n", P1.colors);
+  if (P1.is_foveon)
+  {
+    fprintf(outfile, "Is Foveon: yes\n");
+  }
   if (P1.filters)
   {
-    fprintf(outfile, "\nFilter pattern: ");
+    fprintf(outfile, "Filter internal value: %u\n", P1.filters);
+    fprintf(outfile, "Filter pattern: ");
     if (!P1.cdesc[3])
       P1.cdesc[3] = 'G';
     for (int i = 0; i < 16; i++)
-      putchar(P1.cdesc[MyCoolRawProcessor.fcol(i >> 1, i & 1)]);
+    {
+      fprintf(outfile, "%c", P1.cdesc[MyCoolRawProcessor.fcol(i >> 1, i & 1)]);
+      // Add space after every 4 pixels for better readability
+      if ((i & 3) == 3)
+        fprintf(outfile, " ");
+    }
+    fprintf(outfile, "\n");
+
+    // 9 - Fuji X-Trans (6x6 matrix)
+    if (P1.filters == 9)
+    {
+      fprintf(outfile, "X-Trans pattern: ");
+      for (int i = 0; i < 36; i++)
+      {
+        fprintf(outfile, "%c", P1.cdesc[MyCoolRawProcessor.fcol(i / 6, i % 6)]);
+        // Add space after every 6 pixels for better readability
+        if ((i % 6) == 5)
+          fprintf(outfile, " ");
+      }
+      fprintf(outfile, "\n");
+    }
   }
 
   if (C.black)
